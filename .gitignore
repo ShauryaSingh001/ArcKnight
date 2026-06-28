@@ -1,0 +1,12 @@
+# Node
+node_modules/
+
+# C++ Build Files
+build/
+*.exe
+*.o
+*.obj
+
+# Editor
+.vscode/
+.DS_Store

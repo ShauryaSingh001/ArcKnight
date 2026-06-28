@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ArcKnight OS // CYBER_CHESS</title>
+    
+    <!-- Cyberpunk Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Load jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Load Chessboard.js -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    
+    <!-- Load Chess.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <style>
+        :root {
+            /* Neon Tokyo Palette */
+            --bg-base: #07070A;
+            --surface: #18181B;
+            --border-dark: #312E81;
+            
+            --pink: #FF2E88;
+            --cyan: #00F5FF;
+            --purple: #A855F7;
+            --lime: #9DFF00;
+            
+            --text-main: #F8FAFC;
+            --text-muted: #A1A1AA;
+            
+            /* Board Colors */
+            --board-light: #1F2937; 
+            --board-dark: #111827; 
+            
+            --cyber-gradient: linear-gradient(90deg, #FF2E88, #A855F7, #00F5FF);
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-y: auto; 
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* --- BACKGROUND FX --- */
+        .cyber-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: 
+                linear-gradient(rgba(0, 245, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -2;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* --- LAYOUT & PANELS --- */
+        .dashboard {
+            display: flex;
+            gap: 40px;
+            align-items: stretch;
+            max-width: 1200px;
+            width: 100%;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .panel {
+            background: rgba(24, 24, 27, 0.85); /* #18181B with opacity */
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 4px; /* Sharp corners */
+            border: 1px solid var(--border-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        /* --- LEFT PANEL: CLOCKS --- */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 260px;
+        }
+
+        .side-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--border-dark);
+            padding-bottom: 10px;
+        }
+
+        .player-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 15px;
+            background: var(--bg-base);
+            border-radius: 4px;
+            border: 1px solid var(--border-dark);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        /* The Cyber Accent Bar on Cards */
+        .player-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: var(--border-dark);
+            transition: all 0.3s ease;
+        }
+
+        .player-info {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            letter-spacing: 1px;
+        }
+
+        .timer {
+            font-family: 'Space Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        /* Active Clock States */
+        .player-card.active {
+            border-color: rgba(0, 245, 255, 0.3);
+            box-shadow: inset 0 0 20px rgba(0, 245, 255, 0.05);
+        }
+        .player-card.active::before { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+        .player-card.active .timer { color: var(--cyan); text-shadow: 0 0 8px rgba(0, 245, 255, 0.5); }
+        
+        .player-card.active.low-time { border-color: rgba(255, 46, 136, 0.3); }
+        .player-card.active.low-time::before { background: var(--pink); box-shadow: 0 0 10px var(--pink); }
+        .player-card.active.low-time .timer { color: var(--pink); text-shadow: 0 0 8px rgba(255, 46, 136, 0.5); }
+
+        /* --- CENTER PANEL: BOARD --- */
+        .center-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            margin: 0 0 5px 0;
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--text-main);
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
+        }
+        
+        .gradient-text {
+            background: var(--cyber-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #status {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            color: var(--pink);
+            height: 24px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #board {
+            width: 460px; 
+            border-radius: 2px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
+            border: 2px solid var(--border-dark);
+        }
+
+        .white-1e1d7 { background-color: var(--board-light) !important; color: var(--board-dark) !important; }
+        .black-3c85d { background-color: var(--board-dark) !important; color: var(--board-light) !important; }
+
+        /* --- NEON MICRO-INTERACTIONS --- */
+        .highlight-select {
+            background-color: rgba(255, 46, 136, 0.2) !important;
+            box-shadow: inset 0 0 20px var(--pink) !important;
+        }
+        
+        .highlight-move {
+            background-image: radial-gradient(var(--lime) 15%, transparent 18%) !important;
+        }
+        
+        .highlight-capture {
+            background-color: rgba(255, 46, 136, 0.15) !important;
+            animation: pulse-capture 0.8s infinite alternate !important;
+            cursor: crosshair !important;
+        }
+        @keyframes pulse-capture {
+            from { box-shadow: inset 0 0 15px rgba(220, 38, 38, 0.8); }
+            to { box-shadow: inset 0 0 30px var(--pink); }
+        }
+
+        .highlight-last {
+            background-color: rgba(168, 85, 247, 0.25) !important;
+            box-shadow: inset 0 0 10px var(--purple) !important;
+        }
+
+        .in-check {
+            animation: flash-check 0.4s infinite alternate !important;
+        }
+        @keyframes flash-check {
+            from { background-color: transparent; box-shadow: none; }
+            to { background-color: rgba(255, 46, 136, 0.5); box-shadow: inset 0 0 40px var(--pink); }
+        }
+
+        /* --- RIGHT PANEL: TERMINAL --- */
+        .terminal {
+            background: var(--bg-base);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-dark);
+            border-radius: 4px;
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .terminal::-webkit-scrollbar { width: 4px; }
+        .terminal::-webkit-scrollbar-thumb { background: var(--border-dark); }
+
+        .log-entry { 
+            display: flex; 
+            gap: 15px; 
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03); 
+        }
+        .log-num { color: var(--text-muted); width: 30px; }
+        .log-white { color: var(--text-main); width: 60px; }
+        .log-black { color: var(--cyan); width: 60px; }
+
+    </style>
+</head>
+<body>
+    
+    <div class="cyber-grid"></div>
+    <div class="scanlines"></div>
+
+    <div class="dashboard">
+        
+        <!-- Left: Clocks -->
+        <div class="panel side-panel">
+            <div>
+                <div class="side-title">// MATCH_CTRL</div>
+                
+                <div id="card-engine" class="player-card">
+                    <span class="player-info">ARCKNIGHT_AI</span>
+                    <div id="engine-timer" class="timer">10:00</div>
+                </div>
+            </div>
+
+            <div id="card-player" class="player-card">
+                <span class="player-info">USER_01</span>
+                <div id="player-timer" class="timer">10:00</div>
+            </div>
+        </div>
+
+        <!-- Center: Board -->
+        <div class="center-panel">
+            <h1>ARC<span class="gradient-text">KNIGHT</span></h1>
+            <div id="status">> SYSTEM_READY: AWAITING_INPUT</div>
+            <div id="board"></div>
+        </div>
+
+        <!-- Right: Terminal -->
+        <div class="panel side-panel">
+            <div class="side-title">// SYS_LOG</div>
+            <div id="move-history" class="terminal"></div>
+        </div>
+
+    </div>
+
+    <script>
+        let board = null;
+        let game = new Chess();
+        let $status = $('#status');
+        let $history = $('#move-history');
+        let currentMoveNumber = 1;
+
+        let playerTime = 600, engineTime = 600, isPlayerTurn = true;
+        let timerInterval = null, timerStarted = false, isTimeOut = false;
+
+        function formatTime(s) {
+            let m = Math.floor(s / 60), sec = s % 60;
+            return (m < 10 ? "0" + m : m) + ":" + (sec < 10 ? "0" + sec : sec);
+        }
+
+        function updateClocks() {
+            $('#player-timer').text(formatTime(playerTime));
+            $('#engine-timer').text(formatTime(engineTime));
+            if (playerTime <= 60) $('#card-player').addClass('low-time');
+            if (engineTime <= 60) $('#card-engine').addClass('low-time');
+        }
+
+        function handleTimeout(loser) {
+            clearInterval(timerInterval); isTimeOut = true;
+            $('.player-card').removeClass('active');
+            if (loser === 'player') $status.text("> ERR: TIME_OUT. AI_WINS.").css("color", "var(--pink)");
+            else $status.text("> SYS: TIME_OUT. USER_WINS.").css("color", "var(--lime)");
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            $('#card-player').addClass('active');
+            timerInterval = setInterval(() => {
+                if (game.game_over() || isTimeOut) return clearInterval(timerInterval);
+                if (isPlayerTurn) { playerTime--; if (playerTime <= 0) handleTimeout('player'); } 
+                else { engineTime--; if (engineTime <= 0) handleTimeout('engine'); }
+                updateClocks();
+            }, 1000);
+        }
+
+        // Pad numbers to look like terminal code (01, 02, etc)
+        function logMove(sanMove, isWhite) {
+            let padNum = currentMoveNumber.toString().padStart(2, '0');
+            
+            if (isWhite) {
+                let html = `<div class="log-entry" id="turn-${currentMoveNumber}">
+                                <span class="log-num">${padNum}</span>
+                                <span class="log-white">${sanMove}</span>
+                                <span class="log-black" id="black-move-${currentMoveNumber}">_</span>
+                            </div>`;
+                $history.append(html);
+            } else {
+                $(`#black-move-${currentMoveNumber}`).text(sanMove);
+                currentMoveNumber++;
+            }
+            $history.scrollTop($history[0].scrollHeight);
+        }
+
+        function removeHighlights() { $('#board .square-55d63').removeClass('highlight-select highlight-move highlight-capture'); }
+        function removeLastMove() { $('#board .square-55d63').removeClass('highlight-last'); }
+        function removeCheck() { $('#board .square-55d63').removeClass('in-check'); }
+        
+        function findKing(color) {
+            let b = game.board();
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (b[r][c] && b[r][c].type === 'k' && b[r][c].color === color) {
+                        return String.fromCharCode('a'.charCodeAt(0) + c) + (8 - r);
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Visual screen flash on Checkmate
+        function triggerCheckmateFlash() {
+            $('body').css('background', 'var(--pink)');
+            setTimeout(() => { $('body').css('background', 'var(--bg-base)'); }, 150);
+        }
+
+        function onDragStart(source, piece) {
+            if (game.game_over() || isTimeOut) return false;
+            if (piece.search(/^b/) !== -1) return false; 
+
+            $(`.square-${source}`).addClass('highlight-select');
+
+            let moves = game.moves({ square: source, verbose: true });
+            for (let i = 0; i < moves.length; i++) {
+                if (moves[i].captured) $(`.square-${moves[i].to}`).addClass('highlight-capture');
+                else $(`.square-${moves[i].to}`).addClass('highlight-move');
+            }
+        }
+
+        function onDrop(source, target) {
+            removeHighlights();
+            let move = game.move({ from: source, to: target, promotion: 'q' });
+            if (move === null) return 'snapback';
+
+            removeLastMove();
+            $(`.square-${source}`).addClass('highlight-last');
+            $(`.square-${target}`).addClass('highlight-last');
+
+            removeCheck();
+            if (game.in_check()) $(`.square-${findKing(game.turn())}`).addClass('in-check');
+
+            logMove(move.san, true); 
+            if (!timerStarted) { startTimer(); timerStarted = true; }
+
+            isPlayerTurn = false;
+            $('#card-player').removeClass('active');
+            $('#card-engine').addClass('active');
+
+            if (game.in_checkmate()) {
+                clearInterval(timerInterval);
+                triggerCheckmateFlash();
+                $status.text("> SYS: CHECKMATE. USER_WINS.").css("color", "var(--lime)");
+                $('#card-engine').removeClass('active');
+                return;
+            } else if (game.in_draw()) {
+                clearInterval(timerInterval);
+                $status.text("> SYS: DRAW_DETECTED.").css("color", "var(--text-muted)");
+                $('#card-engine').removeClass('active');
+                return;
+            }
+
+            $status.text("> AI_CALCULATING...").css("color", "var(--cyan)");
+            window.setTimeout(askArcKnight, 250);
+        }
+
+        async function askArcKnight() {
+            let history = game.history({ verbose: true });
+            let moveString = history.map(m => m.from + m.to + (m.promotion ? m.promotion : '')).join(' ');
+
+            try {
+                const response = await fetch('http://localhost:3000/api/move', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ moves: moveString })
+                });
+                
+                const data = await response.json();
+                if (data.bestmove && !isTimeOut) {
+                    let fromSq = data.bestmove.substring(0, 2);
+                    let toSq = data.bestmove.substring(2, 4);
+                    let promo = data.bestmove.length > 4 ? data.bestmove.charAt(4) : '';
+                    
+                    let move = game.move({ from: fromSq, to: toSq, promotion: promo });
+                    board.position(game.fen());
+                    
+                    removeLastMove();
+                    $(`.square-${fromSq}`).addClass('highlight-last');
+                    $(`.square-${toSq}`).addClass('highlight-last');
+
+                    removeCheck();
+                    if (game.in_check()) $(`.square-${findKing(game.turn())}`).addClass('in-check');
+
+                    logMove(move.san, false);
+
+                    isPlayerTurn = true;
+                    $('#card-engine').removeClass('active');
+                    if (!game.game_over()) $('#card-player').addClass('active');
+                    
+                    if (game.in_checkmate()) {
+                        clearInterval(timerInterval);
+                        triggerCheckmateFlash();
+                        $status.text("> FATAL: CHECKMATE. AI_WINS.").css("color", "var(--pink)");
+                    } else if (game.in_draw()) {
+                        clearInterval(timerInterval);
+                        $status.text("> SYS: DRAW_DETECTED.").css("color", "var(--text-muted)");
+                    } else {
+                        $status.text("> SYSTEM_READY: AWAITING_INPUT").css("color", "var(--pink)");
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                clearInterval(timerInterval);
+                $status.text("> ERR: CONNECTION_LOST.").css("color", "var(--pink)");
+            }
+        }
+
+        let config = {
+            draggable: true,
+            position: 'start',
+            moveSpeed: 200,      
+            snapbackSpeed: 300,  
+            snapSpeed: 150,
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapbackEnd: removeHighlights,
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        };
+        board = Chessboard('board', config);
+        updateClocks();
+    </script>
+</body>
+</html>
