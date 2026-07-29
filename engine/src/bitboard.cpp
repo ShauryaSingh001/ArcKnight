@@ -20,4 +20,4 @@ void print_bitboard(Bitboard bb) {
     std::cout << "Hexadecimal representation: 0x" << std::hex << bb << std::dec << "\n\n";
 }
 
-} // namespace ArcKnight::Bitboards
+} 

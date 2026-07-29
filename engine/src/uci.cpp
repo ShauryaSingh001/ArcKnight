@@ -57,17 +57,15 @@ void loop() {
                 if (m != 0) {
                     board.make_move(m);
                 } else {
-                    // NEW: Scream and crash the engine so the server catches the exact bad move!
                     std::cerr << "FATAL: ArcKnight does not understand the move: " << token << std::endl;
                     exit(1); 
                 }
             }
         } 
         else if (command == "go") {
-            int target_depth = 4; // A fallback default depth just in case
+            int target_depth = 4; 
             std::string token;
             
-            // Read the rest of the line to find the depth
             while (iss >> token) {
                 if (token == "depth") {
                     iss >> target_depth;
@@ -80,4 +78,4 @@ void loop() {
     }
 }
 
-} // namespace ArcKnight::UCI
+} 

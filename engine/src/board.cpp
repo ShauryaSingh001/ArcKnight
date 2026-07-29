@@ -111,37 +111,32 @@ void Board::load_fen(const std::string& fen) {
     }
 }
 
-// --- BULLETPROOF MAKE MOVE ---
 bool Board::make_move(Move move) {
     Square from = Moves::get_from(move);
     Square to = Moves::get_to(move);
     int flag = Moves::get_flag(move);
     
     PieceType pt = get_piece_at(from);
-    if (pt == PIECE_TYPE_NB) return false; // Safety catch
+    if (pt == PIECE_TYPE_NB) return false; 
     
     Color us = side_to_move;
     Color them = (us == WHITE) ? BLACK : WHITE;
 
-    // Remove piece from starting square
     Bitboards::clear_bit(pieces[pt], from);
     Bitboards::clear_bit(colors[us], from);
 
-    // Guaranteed Capture handling (Nuke anything sitting on the target square)
     PieceType captured_pt = get_piece_at(to);
     if (captured_pt != PIECE_TYPE_NB && Bitboards::test_bit(colors[them], to)) {
         Bitboards::clear_bit(pieces[captured_pt], to);
         Bitboards::clear_bit(colors[them], to);
     }
 
-    // En Passant Capture handling
     if (flag == FLAG_EP_CAPTURE) {
         Square ep_pawn_sq = (us == WHITE) ? static_cast<Square>(to - 8) : static_cast<Square>(to + 8);
         Bitboards::clear_bit(pieces[PAWN], ep_pawn_sq);
         Bitboards::clear_bit(colors[them], ep_pawn_sq);
     }
 
-    // Place piece on target square (Handling Promotions)
     PieceType place_pt = pt;
     if (flag == FLAG_PROMO_QUEEN) place_pt = QUEEN;
     else if (flag == FLAG_PROMO_ROOK) place_pt = ROOK;
@@ -151,18 +146,15 @@ bool Board::make_move(Move move) {
     Bitboards::set_bit(pieces[place_pt], to);
     Bitboards::set_bit(colors[us], to);
 
-    // Manage En Passant ghost square
     en_passant_sq = SQ_NONE;
     if (flag == FLAG_DOUBLE_PUSH) {
         en_passant_sq = (us == WHITE) ? static_cast<Square>(from + 8) : static_cast<Square>(from - 8);
     }
 
-    // Swap turns
     side_to_move = them;
 
-    // LEGALITY CHECK
     Square king_sq = Bitboards::lsb_index(pieces[KING] & colors[us]);
-    if (king_sq == SQ_NONE) return false; // Safety catch if King vanished
+    if (king_sq == SQ_NONE) return false; 
     if (Attacks::is_square_attacked(*this, king_sq, them)) {
         return false; 
     }
@@ -170,4 +162,4 @@ bool Board::make_move(Move move) {
     return true; 
 }
 
-} // namespace ArcKnight
+} 

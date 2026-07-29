@@ -104,32 +104,27 @@ bool is_square_attacked(const Board& board, Square sq, Color attacker_color) {
     Bitboard occupancy = board.colors[WHITE] | board.colors[BLACK];
     Bitboard attackers = board.colors[attacker_color];
 
-    // 1. Attacked by Pawns? (We reverse the pawn attack direction)
     Bitboard pawn_attacks = 0ULL;
-    if (attacker_color == WHITE) { // White pawns attack "up", so we look "down" from the square
+    if (attacker_color == WHITE) {
         pawn_attacks |= (1ULL << sq) >> 7 & NOT_A_FILE;
         pawn_attacks |= (1ULL << sq) >> 9 & NOT_H_FILE;
-    } else { // Black pawns attack "down", so we look "up"
+    } else {
         pawn_attacks |= (1ULL << sq) << 9 & NOT_A_FILE;
         pawn_attacks |= (1ULL << sq) << 7 & NOT_H_FILE;
     }
     if (pawn_attacks & board.pieces[PAWN] & attackers) return true;
 
-    // 2. Attacked by Knights?
     if (KNIGHT_ATTACKS[sq] & board.pieces[KNIGHT] & attackers) return true;
 
-    // 3. Attacked by Kings?
     if (KING_ATTACKS[sq] & board.pieces[KING] & attackers) return true;
 
-    // 4. Attacked by Bishops or Queens?
     Bitboard diagonal_attackers = (board.pieces[BISHOP] | board.pieces[QUEEN]) & attackers;
     if (generate_bishop_attacks(sq, occupancy) & diagonal_attackers) return true;
 
-    // 5. Attacked by Rooks or Queens?
     Bitboard straight_attackers = (board.pieces[ROOK] | board.pieces[QUEEN]) & attackers;
     if (generate_rook_attacks(sq, occupancy) & straight_attackers) return true;
 
     return false;
 }
 
-} // namespace ArcKnight::Attacks
+}
