@@ -29,9 +29,8 @@ public:
     void print() const;
     PieceType get_piece_at(Square sq) const;
     
-    // --- NEW: FEN Parser ---
     void load_fen(const std::string& fen);
     bool make_move(Move move);
 };
 
-} // namespace ArcKnight
+}

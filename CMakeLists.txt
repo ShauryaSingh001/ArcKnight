@@ -11,5 +11,6 @@ else()
     add_compile_options(-O3 -Wall -Wextra -march=native -std=c++20)
 endif()
 
+enable_testing()
 add_subdirectory(engine)
 add_subdirectory(tests)

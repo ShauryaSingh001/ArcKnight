@@ -7,6 +7,8 @@
 
 namespace ArcKnight::Search {
 
+uint64_t nodes_evaluated = 0;    
+
 int quiescence(const Board& board, int alpha, int beta) {
     int stand_pat = Evaluation::evaluate(board);
 
@@ -48,9 +50,16 @@ int quiescence(const Board& board, int alpha, int beta) {
 }
 
 int negamax(const Board& board, int depth, int alpha, int beta) {
-   if (depth == 0) {
-        return quiescence(board, alpha, beta);
-    }
+
+    nodes_evaluated++;
+
+    if (depth == 0) {
+    return ArcKnight::Evaluation::evaluate(board);
+}
+
+if (depth == 0) {
+    return quiescence(board, alpha, beta);
+}
 
     MoveList list;
     MoveGen::generate_pseudo_legal(board, list);
