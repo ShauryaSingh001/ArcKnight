@@ -28,9 +28,23 @@ The goal of this project was not just to build a playable chess game, but to exp
 
 ---
 
+# ⚡ Performance & Testing
+
+ArcKnight is built with a focus on raw execution speed and memory efficiency. The engine relies on 64-bit integer bitboards and fast bitwise operations to generate and evaluate moves.
+
+**Latest Benchmarks (Single-Threaded):**
+* **Throughput:** ~29.2 Million Nodes Per Second (NPS)
+* **Search Depth:** Reaches Depth 6 in ~40 milliseconds
+* **Time Complexity Control:** Alpha-Beta pruning heavily optimizes the standard Minimax game tree
+
+**Testing Pipeline:**
+The project utilizes **Google Test (gtest)** via CMake's `FetchContent` to mathematically validate low-level bitwise operations, move encoding/decoding, and search performance benchmarks to ensure data integrity during deep searches.
+
+---
+
 # 🏗️ Architecture
 
-```
+```text
 Frontend (HTML/CSS/JavaScript)
             │
             ▼
@@ -126,28 +140,24 @@ The interface uses:
 
 # 📁 Project Structure
 
-```
+```text
 ArcKnight/
 │
-├── engine/
-│   ├── bitboard/
-│   ├── movegen/
-│   ├── search/
-│   ├── evaluation/
-│   └── main.cpp
+├── engine/                # C++ Engine Core
+│   ├── inc/               # Header files (.h)
+│   ├── src/               # Source files (.cpp)
+│   └── CMakeLists.txt     # Engine build config
 │
-├── backend/
-│   ├── server.js
-│   └── package.json
+├── tests/                 # GoogleTest Suite
+│   ├── gtest_main.cpp     # Unit tests & Benchmarks
+│   ├── main_test.cpp      
+│   └── CMakeLists.txt     # Test build config
 │
-├── frontend/
-│   ├── index.html
-│   ├── style.css
-│   ├── script.js
-│   └── assets/
-│
-├── CMakeLists.txt
-└── README.md
+├── index.html             # Frontend UI
+├── server.js              # Node.js Backend
+├── package.json           # Node dependencies
+├── CMakeLists.txt         # Root build config
+└── readme.md              # Documentation
 ```
 
 ---
@@ -156,7 +166,8 @@ ArcKnight/
 
 | Layer     | Technologies            |
 | --------- | ----------------------- |
-| Engine    | C++17, CMake            |
+| Engine    | C++20, CMake            |
+| Testing   | Google Test (gtest)     |
 | Backend   | Node.js, Express        |
 | Frontend  | HTML5, CSS3, JavaScript |
 | Libraries | chess.js, chessboard.js |
@@ -174,13 +185,12 @@ Planned enhancements include:
 * Endgame Tablebases
 * UCI Protocol support
 * Adjustable engine difficulty
-* Performance benchmarking and profiling
 
 ---
 
 # ⚙️ Running Locally
 
-## 1. Build the engine
+## 1. Build the engine and tests
 
 ```bash
 mkdir build
@@ -189,20 +199,25 @@ cmake ..
 cmake --build .
 ```
 
-## 2. Install backend dependencies
+## 2. Run Engine Benchmarks (Optional)
 
 ```bash
+.\tests\engine_tests.exe
+```
+
+## 3. Install backend dependencies
+
+```bash
+cd ..
 npm install
 ```
 
-## 3. Start the backend
+## 4. Start the backend
 
 ```bash
 node server.js
 ```
 
-## 4. Play
+## 5. Play
 
-Open the frontend in your browser and start your first game as White.
-
----
+Open `index.html` in your browser and start your first game as White.
