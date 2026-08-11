@@ -4,10 +4,69 @@
 #include "attacks.h"
 #include "bitboard.h"
 #include <iostream>
+#include <algorithm>
+#include <vector>
 
 namespace ArcKnight::Search {
 
 uint64_t nodes_evaluated = 0;    
+
+// --- MVV-LVA Move Ordering Setup ---
+const int piece_values[6] = {100, 300, 300, 500, 900, 10000};
+int mvv_lva[6][6];
+bool mvv_lva_initialized = false;
+
+void init_mvv_lva() {
+    for (int attacker = 0; attacker < 6; attacker++) {
+        for (int victim = 0; victim < 6; victim++) {
+            mvv_lva[attacker][victim] = piece_values[victim] + 1000 - (piece_values[attacker] / 100);
+        }
+    }
+    mvv_lva_initialized = true;
+}
+
+struct ScoredMove {
+    Move move;
+    int score;
+};
+
+// Helper function to sort generated moves before searching them
+void sort_moves(const Board& board, MoveList& list) {
+    if (!mvv_lva_initialized) init_mvv_lva();
+    
+    std::vector<ScoredMove> scored_moves;
+    scored_moves.reserve(list.count);
+    
+    for (int i = 0; i < list.count; ++i) {
+        Move m = list.moves[i];
+        int score = 0;
+        int flag = Moves::get_flag(m);
+        
+        // Score captures using the MVV-LVA matrix
+        if (flag == FLAG_CAPTURE || flag == FLAG_EP_CAPTURE) {
+            PieceType attacker = board.get_piece_at(Moves::get_from(m));
+            PieceType victim = board.get_piece_at(Moves::get_to(m));
+            
+            if (flag == FLAG_EP_CAPTURE) victim = PAWN;
+            
+            if (attacker < PIECE_TYPE_NB && victim < PIECE_TYPE_NB) {
+                score = mvv_lva[attacker][victim];
+            }
+        }
+        
+        scored_moves.push_back({m, score});
+    }
+    
+    // Sort descending (best captures first)
+    std::sort(scored_moves.begin(), scored_moves.end(), [](const ScoredMove& a, const ScoredMove& b) {
+        return a.score > b.score;
+    });
+    
+    // Overwrite the original list with the sorted moves
+    for (int i = 0; i < list.count; ++i) {
+        list.moves[i] = scored_moves[i].move;
+    }
+}
 
 int quiescence(const Board& board, int alpha, int beta) {
     int stand_pat = Evaluation::evaluate(board);
@@ -21,6 +80,9 @@ int quiescence(const Board& board, int alpha, int beta) {
 
     MoveList list;
     MoveGen::generate_pseudo_legal(board, list);
+    
+    // Sort captures before searching
+    sort_moves(board, list);
 
     for (int i = 0; i < list.count; ++i) {
         Move move = list.moves[i];
@@ -53,16 +115,16 @@ int negamax(const Board& board, int depth, int alpha, int beta) {
 
     nodes_evaluated++;
 
+    // FIXED: Removed the duplicate depth == 0 check that was blocking quiescence
     if (depth == 0) {
-    return ArcKnight::Evaluation::evaluate(board);
-}
-
-if (depth == 0) {
-    return quiescence(board, alpha, beta);
-}
+        return quiescence(board, alpha, beta);
+    }
 
     MoveList list;
     MoveGen::generate_pseudo_legal(board, list);
+    
+    // Sort moves to trigger Alpha-Beta cutoffs earlier
+    sort_moves(board, list);
     
     int max_score = -999999;
     int legal_moves = 0;
@@ -111,6 +173,9 @@ Move get_best_move(const Board& board, int depth) {
     
     MoveGen::generate_pseudo_legal(board, list);
     std::cout << "  [Search] Generated " << list.count << " pseudo-legal moves." << std::endl;
+    
+    // Sort moves at the root level too
+    sort_moves(board, list);
     
     Move best_move = 0;
     int best_score = -50000;

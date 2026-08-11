@@ -12,13 +12,11 @@ const ENGINE_PATH = path.join(__dirname, 'build', 'tests', 'arc_test.exe');
 app.post('/api/move', (req, res) => {
     const moveHistory = req.body.moves || ""; 
     console.log(`\n[Server] 📥 Received request for moves: "${moveHistory}"`);
-    
-    // Spawn the engine
+
     const engine = spawn(ENGINE_PATH);
     let engineOutput = "";
     let handled = false;
 
-    // 1. Monitor real-time output
     engine.stdout.on('data', (data) => {
         const chunk = data.toString();
         engineOutput += chunk;
@@ -32,12 +30,10 @@ app.post('/api/move', (req, res) => {
         }
     });
 
-    // 2. Catch stderr (C++ runtime errors/assertions)
     engine.stderr.on('data', (data) => {
         console.error(`[Engine Stderr ❌]: ${data.toString()}`);
     });
 
-    // 3. Handle unexpected engine closures/crashes
     engine.on('close', (code) => {
         console.log(`[Server] 💀 Engine process exited with code ${code}`);
         if (!handled) {
@@ -46,18 +42,16 @@ app.post('/api/move', (req, res) => {
         }
     });
 
-    // Send standard test commands down the pipe
     engine.stdin.write("uci\n");
     engine.stdin.write("isready\n");
     
-    // If moveHistory is empty, just ask it to think from startpos
     if (moveHistory) {
         engine.stdin.write(`position startpos moves ${moveHistory}\n`);
     } else {
         engine.stdin.write(`position startpos\n`);
     }
     
-    engine.stdin.write("go depth 1\n"); // Specifying a shallow depth prevents infinite loops!
+    engine.stdin.write("go depth 5\n"); 
 });
 
 const PORT = 3000;
