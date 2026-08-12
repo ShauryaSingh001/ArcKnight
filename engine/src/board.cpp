@@ -122,6 +122,22 @@ bool Board::make_move(Move move) {
     Color us = side_to_move;
     Color them = (us == WHITE) ? BLACK : WHITE;
 
+    // --- Handle Castling Rook Movement ---
+    if (flag == FLAG_CASTLING) {
+        Square rook_from = SQ_NONE, rook_to = SQ_NONE;
+        if (to == SQ_G1) { rook_from = SQ_H1; rook_to = SQ_F1; } // White Kingside
+        else if (to == SQ_C1) { rook_from = SQ_A1; rook_to = SQ_D1; } // White Queenside
+        else if (to == SQ_G8) { rook_from = SQ_H8; rook_to = SQ_F8; } // Black Kingside
+        else if (to == SQ_C8) { rook_from = SQ_A8; rook_to = SQ_D8; } // Black Queenside
+
+        if (rook_from != SQ_NONE) {
+            Bitboards::clear_bit(pieces[ROOK], rook_from);
+            Bitboards::clear_bit(colors[us], rook_from);
+            Bitboards::set_bit(pieces[ROOK], rook_to);
+            Bitboards::set_bit(colors[us], rook_to);
+        }
+    }
+
     Bitboards::clear_bit(pieces[pt], from);
     Bitboards::clear_bit(colors[us], from);
 
@@ -146,6 +162,18 @@ bool Board::make_move(Move move) {
     Bitboards::set_bit(pieces[place_pt], to);
     Bitboards::set_bit(colors[us], to);
 
+    // --- Update Castling Rights ---
+    // Revoke rights if Kings move
+    if (pt == KING) {
+        if (us == WHITE) castling_rights &= ~(WHITE_OO | WHITE_OOO);
+        else castling_rights &= ~(BLACK_OO | BLACK_OOO);
+    }
+    // Revoke rights if Rooks move or are captured
+    if (from == SQ_H1 || to == SQ_H1) castling_rights &= ~WHITE_OO;
+    if (from == SQ_A1 || to == SQ_A1) castling_rights &= ~WHITE_OOO;
+    if (from == SQ_H8 || to == SQ_H8) castling_rights &= ~BLACK_OO;
+    if (from == SQ_A8 || to == SQ_A8) castling_rights &= ~BLACK_OOO;
+
     en_passant_sq = SQ_NONE;
     if (flag == FLAG_DOUBLE_PUSH) {
         en_passant_sq = (us == WHITE) ? static_cast<Square>(from + 8) : static_cast<Square>(from - 8);
@@ -162,4 +190,4 @@ bool Board::make_move(Move move) {
     return true; 
 }
 
-} 
+}

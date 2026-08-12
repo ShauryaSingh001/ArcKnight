@@ -9,10 +9,9 @@ namespace ArcKnight {
 enum MoveFlag : int {
     FLAG_QUIET          = 0,
     FLAG_DOUBLE_PUSH    = 1,
-    FLAG_KING_CASTLE    = 2,
-    FLAG_QUEEN_CASTLE   = 3,
     FLAG_CAPTURE        = 4,
     FLAG_EP_CAPTURE     = 5,
+    FLAG_CASTLING       = 6,
     FLAG_PROMO_KNIGHT   = 8,
     FLAG_PROMO_BISHOP   = 9,
     FLAG_PROMO_ROOK     = 10,
@@ -25,13 +24,11 @@ using Move = std::uint16_t;
 namespace Moves {
 
 // --- ENCODING ---
-// Shifts the 'To' square by 6 bits, and the 'Flags' by 12 bits, leaving 'From' at the bottom.
 inline Move encode(Square from, Square to, int flag = FLAG_QUIET) {
     return static_cast<Move>(from | (to << 6) | (flag << 12));
 }
 
 // --- DECODING ---
-// Use bitwise AND (&) with a mask (0x3F = 63, which is 6 bits of 1s) to isolate the data.
 inline Square get_from(Move move) {
     return static_cast<Square>(move & 0x3F);
 }
@@ -45,7 +42,6 @@ inline int get_flag(Move move) {
 }
 
 // --- UTILITY ---
-// Converts a move like 12 to 28 into standard algebraic notation like "e2e4"
 inline std::string to_string(Move move) {
     Square f = get_from(move);
     Square t = get_to(move);
@@ -56,7 +52,6 @@ inline std::string to_string(Move move) {
     s += char('a' + (t % 8)); // to file
     s += char('1' + (t / 8)); // to rank
     
-    // Add promotion character if applicable
     int flag = get_flag(move);
     if (flag == FLAG_PROMO_QUEEN) s += 'q';
     else if (flag == FLAG_PROMO_ROOK) s += 'r';
@@ -66,12 +61,11 @@ inline std::string to_string(Move move) {
     return s;
 }
 
-} // namespace Moves
+}
 
 // --- MOVELIST ---
-// A pre-allocated array to hold moves during generation (much faster than std::vector)
 struct MoveList {
-    Move moves[256]; // 256 is higher than the max possible legal moves in any chess position
+    Move moves[256]; 
     int count = 0;
 
     inline void add(Move move) {
@@ -79,4 +73,4 @@ struct MoveList {
     }
 };
 
-} // namespace ArcKnight
+} 

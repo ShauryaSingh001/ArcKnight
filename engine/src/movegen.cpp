@@ -1,5 +1,6 @@
 #include "movegen.h"
 #include "bitboard.h"
+#include "attacks.h"
 
 namespace ArcKnight::MoveGen {
 
@@ -159,6 +160,47 @@ void generate_pseudo_legal(const Board& board, MoveList& list) {
             Square to = Bitboards::pop_lsb(attacks);
             int flag = Bitboards::test_bit(enemy_pieces, to) ? FLAG_CAPTURE : FLAG_QUIET;
             list.add(Moves::encode(from, to, flag));
+        }
+    }
+
+    // --- Generate Castling Moves ---
+    if (us == WHITE) {
+        if (board.castling_rights & WHITE_OO) {
+            if (!Bitboards::test_bit(occupancy, SQ_F1) && !Bitboards::test_bit(occupancy, SQ_G1)) {
+                if (!Attacks::is_square_attacked(board, SQ_E1, BLACK) &&
+                    !Attacks::is_square_attacked(board, SQ_F1, BLACK) &&
+                    !Attacks::is_square_attacked(board, SQ_G1, BLACK)) {
+                    list.add(Moves::encode(SQ_E1, SQ_G1, FLAG_CASTLING));
+                }
+            }
+        }
+        if (board.castling_rights & WHITE_OOO) {
+            if (!Bitboards::test_bit(occupancy, SQ_B1) && !Bitboards::test_bit(occupancy, SQ_C1) && !Bitboards::test_bit(occupancy, SQ_D1)) {
+                if (!Attacks::is_square_attacked(board, SQ_E1, BLACK) &&
+                    !Attacks::is_square_attacked(board, SQ_D1, BLACK) &&
+                    !Attacks::is_square_attacked(board, SQ_C1, BLACK)) {
+                    list.add(Moves::encode(SQ_E1, SQ_C1, FLAG_CASTLING));
+                }
+            }
+        }
+    } else {
+        if (board.castling_rights & BLACK_OO) {
+            if (!Bitboards::test_bit(occupancy, SQ_F8) && !Bitboards::test_bit(occupancy, SQ_G8)) {
+                if (!Attacks::is_square_attacked(board, SQ_E8, WHITE) &&
+                    !Attacks::is_square_attacked(board, SQ_F8, WHITE) &&
+                    !Attacks::is_square_attacked(board, SQ_G8, WHITE)) {
+                    list.add(Moves::encode(SQ_E8, SQ_G8, FLAG_CASTLING));
+                }
+            }
+        }
+        if (board.castling_rights & BLACK_OOO) {
+            if (!Bitboards::test_bit(occupancy, SQ_B8) && !Bitboards::test_bit(occupancy, SQ_C8) && !Bitboards::test_bit(occupancy, SQ_D8)) {
+                if (!Attacks::is_square_attacked(board, SQ_E8, WHITE) &&
+                    !Attacks::is_square_attacked(board, SQ_D8, WHITE) &&
+                    !Attacks::is_square_attacked(board, SQ_C8, WHITE)) {
+                    list.add(Moves::encode(SQ_E8, SQ_C8, FLAG_CASTLING));
+                }
+            }
         }
     }
 
