@@ -17,12 +17,13 @@ The goal of this project was not just to build a playable chess game, but to exp
 # ✨ Features
 
 * ♟️ Custom chess engine written entirely in C++
-* ⚡ Bitboard-based board representation for high-performance move generation
+* ⚡ Bitboard-based board representation for high-performance move generation (including full Castling, En Passant, and Promotions)
 * 🧠 Negamax search with Alpha-Beta pruning
+* 🔥 **MVV-LVA Move Ordering** (Most Valuable Victim - Least Valuable Attacker) for aggressive search tree pruning
 * 🎯 Quiescence Search to reduce the Horizon Effect
-* 🌐 Node.js backend communicating with the engine using child processes
+* 🌐 Node.js backend communicating with the engine via the **UCI (Universal Chess Interface)** protocol using child processes
 * 🎨 Custom Cyberpunk-inspired responsive interface
-* ⏱️ Real-time chess clocks
+* ⏱️ Real-time chess clocks & untimed **Zen Mode** for deep analysis
 * 📜 Live move-history terminal
 * ✨ Animated move highlights and check notifications
 
@@ -34,8 +35,8 @@ ArcKnight is built with a focus on raw execution speed and memory efficiency. Th
 
 **Latest Benchmarks (Single-Threaded):**
 * **Throughput:** ~29.2 Million Nodes Per Second (NPS)
-* **Search Depth:** Reaches Depth 6 in ~40 milliseconds
-* **Time Complexity Control:** Alpha-Beta pruning heavily optimizes the standard Minimax game tree
+* **Search Depth:** Stable at Depth 5 in timed matches (Reaches Depth 6 in Zen Mode)
+* **Time Complexity Control:** MVV-LVA combined with Alpha-Beta pruning heavily optimizes the standard Minimax game tree, slashing node evaluations from millions to thousands.
 
 **Testing Pipeline:**
 The project utilizes **Google Test (gtest)** via CMake's `FetchContent` to mathematically validate low-level bitwise operations, move encoding/decoding, and search performance benchmarks to ensure data integrity during deep searches.
@@ -50,13 +51,13 @@ Frontend (HTML/CSS/JavaScript)
             ▼
       Node.js Backend
             │
-     child_process API
+     child_process API (UCI Protocol)
             │
             ▼
       C++ Chess Engine
 ```
 
-The application is divided into three independent layers to keep the engine, backend, and UI cleanly separated.
+The application is divided into three independent layers to enforce a strict separation of concerns, keeping the C++ backend focused purely on bare-metal performance while Node.js handles asynchronous web client networking.
 
 ---
 
@@ -76,8 +77,9 @@ The engine searches positions using:
 
 * Negamax
 * Alpha-Beta Pruning
+* MVV-LVA Move Ordering
 
-Alpha-Beta pruning eliminates branches that cannot influence the final decision, allowing the engine to search significantly deeper than a naïve minimax implementation.
+By ordering moves to evaluate high-value captures first, Alpha-Beta pruning successfully eliminates massive branches of the game tree that cannot influence the final decision, allowing the engine to search significantly deeper than a naïve minimax implementation.
 
 ### Quiescence Search
 
@@ -104,12 +106,12 @@ The backend acts as a bridge between the browser and the C++ engine.
 Its responsibilities include:
 
 * Spawning the compiled C++ executable
-* Maintaining communication through standard input/output
-* Receiving moves from the frontend
+* Maintaining Inter-Process Communication (IPC) through standard input/output
+* Translating client actions into standard UCI text strings
 * Returning the engine's best calculated move
 * Exposing a lightweight REST API
 
-This architecture keeps the engine completely independent from the frontend, making it easy to swap interfaces or extend functionality in the future.
+This architecture keeps the engine completely independent from the frontend, making it theoretically capable of plugging into any standard chess GUI.
 
 ---
 
@@ -121,7 +123,7 @@ Features include:
 
 * Responsive design
 * Animated move highlights
-* Live chess clocks
+* Live chess clocks with Zen Mode toggle
 * Terminal-inspired move history
 * Check and checkmate alerts
 * Smooth UI micro-interactions
@@ -134,7 +136,7 @@ The interface uses:
 * chess.js (move legality)
 * chessboard.js (board rendering)
 
-> **Note:** `chess.js` is used only for client-side move validation. All move evaluation and decision-making are performed by the custom C++ engine.
+> **Note:** `chess.js` is used only for client-side move validation. All move evaluation, generation, and decision-making are performed exclusively by the custom C++ engine.
 
 ---
 
@@ -178,12 +180,11 @@ ArcKnight/
 
 Planned enhancements include:
 
-* Move Ordering (MVV-LVA, Killer Moves, History Heuristic)
 * Transposition Tables using Zobrist Hashing
 * Iterative Deepening Search
+* Full UCI Time Management Integration
 * Opening Book
 * Endgame Tablebases
-* UCI Protocol support
 * Adjustable engine difficulty
 
 ---

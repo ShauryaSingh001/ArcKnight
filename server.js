@@ -11,7 +11,10 @@ const ENGINE_PATH = path.join(__dirname, 'build', 'tests', 'arc_test.exe');
 
 app.post('/api/move', (req, res) => {
     const moveHistory = req.body.moves || ""; 
+    const isUntimed = req.body.isUntimed || false;
+    
     console.log(`\n[Server] 📥 Received request for moves: "${moveHistory}"`);
+    console.log(`[Server] ⏱️ Zen Mode (Untimed): ${isUntimed}`);
 
     const engine = spawn(ENGINE_PATH);
     let engineOutput = "";
@@ -51,7 +54,12 @@ app.post('/api/move', (req, res) => {
         engine.stdin.write(`position startpos\n`);
     }
     
-    engine.stdin.write("go depth 5\n"); 
+    // Engine Search Command Logic
+    if (isUntimed) {
+        engine.stdin.write("go depth 6\n"); // Deeper search for untimed mode
+    } else {
+        engine.stdin.write("go depth 5\n"); 
+    }
 });
 
 const PORT = 3000;

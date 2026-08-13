@@ -19,7 +19,6 @@
 
     <style>
         :root {
-            /* Neon Tokyo Palette */
             --bg-base: #07070A;
             --surface: #18181B;
             --border-dark: #312E81;
@@ -32,7 +31,6 @@
             --text-main: #F8FAFC;
             --text-muted: #A1A1AA;
             
-            /* Board Colors */
             --board-light: #1F2937; 
             --board-dark: #111827; 
             
@@ -53,7 +51,6 @@
             box-sizing: border-box;
         }
 
-        /* --- BACKGROUND FX --- */
         .cyber-grid {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -73,7 +70,6 @@
             z-index: 9999;
         }
 
-        /* --- LAYOUT & PANELS --- */
         .dashboard {
             display: flex;
             gap: 40px;
@@ -85,15 +81,14 @@
         }
 
         .panel {
-            background: rgba(24, 24, 27, 0.85); /* #18181B with opacity */
+            background: rgba(24, 24, 27, 0.85); 
             backdrop-filter: blur(10px);
             padding: 25px;
-            border-radius: 4px; /* Sharp corners */
+            border-radius: 4px; 
             border: 1px solid var(--border-dark);
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
-        /* --- LEFT PANEL: CLOCKS --- */
         .side-panel {
             display: flex;
             flex-direction: column;
@@ -113,6 +108,53 @@
             padding-bottom: 10px;
         }
 
+        /* --- TOGGLE SWITCH CSS --- */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: var(--bg-base);
+            border: 1px solid var(--border-dark);
+            border-radius: 4px;
+        }
+        
+        .toggle-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--board-light);
+            transition: .4s;
+            border-radius: 22px;
+            border: 1px solid var(--border-dark);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: var(--text-muted);
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: rgba(0, 245, 255, 0.2); border-color: var(--cyan); }
+        input:checked + .slider:before { background-color: var(--cyan); transform: translateX(22px); box-shadow: 0 0 10px var(--cyan); }
+
         .player-card {
             display: flex;
             flex-direction: column;
@@ -126,7 +168,6 @@
             position: relative;
         }
 
-        /* The Cyber Accent Bar on Cards */
         .player-card::before {
             content: '';
             position: absolute;
@@ -150,7 +191,6 @@
             transition: all 0.3s ease;
         }
 
-        /* Active Clock States */
         .player-card.active {
             border-color: rgba(0, 245, 255, 0.3);
             box-shadow: inset 0 0 20px rgba(0, 245, 255, 0.05);
@@ -162,12 +202,7 @@
         .player-card.active.low-time::before { background: var(--pink); box-shadow: 0 0 10px var(--pink); }
         .player-card.active.low-time .timer { color: var(--pink); text-shadow: 0 0 8px rgba(255, 46, 136, 0.5); }
 
-        /* --- CENTER PANEL: BOARD --- */
-        .center-panel {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .center-panel { display: flex; flex-direction: column; align-items: center; }
 
         h1 {
             font-family: 'Orbitron', sans-serif;
@@ -206,40 +241,14 @@
         .white-1e1d7 { background-color: var(--board-light) !important; color: var(--board-dark) !important; }
         .black-3c85d { background-color: var(--board-dark) !important; color: var(--board-light) !important; }
 
-        /* --- NEON MICRO-INTERACTIONS --- */
-        .highlight-select {
-            background-color: rgba(255, 46, 136, 0.2) !important;
-            box-shadow: inset 0 0 20px var(--pink) !important;
-        }
-        
-        .highlight-move {
-            background-image: radial-gradient(var(--lime) 15%, transparent 18%) !important;
-        }
-        
-        .highlight-capture {
-            background-color: rgba(255, 46, 136, 0.15) !important;
-            animation: pulse-capture 0.8s infinite alternate !important;
-            cursor: crosshair !important;
-        }
-        @keyframes pulse-capture {
-            from { box-shadow: inset 0 0 15px rgba(220, 38, 38, 0.8); }
-            to { box-shadow: inset 0 0 30px var(--pink); }
-        }
+        .highlight-select { background-color: rgba(255, 46, 136, 0.2) !important; box-shadow: inset 0 0 20px var(--pink) !important; }
+        .highlight-move { background-image: radial-gradient(var(--lime) 15%, transparent 18%) !important; }
+        .highlight-capture { background-color: rgba(255, 46, 136, 0.15) !important; animation: pulse-capture 0.8s infinite alternate !important; cursor: crosshair !important; }
+        @keyframes pulse-capture { from { box-shadow: inset 0 0 15px rgba(220, 38, 38, 0.8); } to { box-shadow: inset 0 0 30px var(--pink); } }
+        .highlight-last { background-color: rgba(168, 85, 247, 0.25) !important; box-shadow: inset 0 0 10px var(--purple) !important; }
+        .in-check { animation: flash-check 0.4s infinite alternate !important; }
+        @keyframes flash-check { from { background-color: transparent; box-shadow: none; } to { background-color: rgba(255, 46, 136, 0.5); box-shadow: inset 0 0 40px var(--pink); } }
 
-        .highlight-last {
-            background-color: rgba(168, 85, 247, 0.25) !important;
-            box-shadow: inset 0 0 10px var(--purple) !important;
-        }
-
-        .in-check {
-            animation: flash-check 0.4s infinite alternate !important;
-        }
-        @keyframes flash-check {
-            from { background-color: transparent; box-shadow: none; }
-            to { background-color: rgba(255, 46, 136, 0.5); box-shadow: inset 0 0 40px var(--pink); }
-        }
-
-        /* --- RIGHT PANEL: TERMINAL --- */
         .terminal {
             background: var(--bg-base);
             font-family: 'Space Mono', monospace;
@@ -258,16 +267,10 @@
         .terminal::-webkit-scrollbar { width: 4px; }
         .terminal::-webkit-scrollbar-thumb { background: var(--border-dark); }
 
-        .log-entry { 
-            display: flex; 
-            gap: 15px; 
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03); 
-        }
+        .log-entry { display: flex; gap: 15px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
         .log-num { color: var(--text-muted); width: 30px; }
         .log-white { color: var(--text-main); width: 60px; }
         .log-black { color: var(--cyan); width: 60px; }
-
     </style>
 </head>
 <body>
@@ -282,6 +285,15 @@
             <div>
                 <div class="side-title">// MATCH_CTRL</div>
                 
+                <!-- Zen Mode Toggle -->
+                <div class="toggle-container">
+                    <span class="toggle-label">ZEN_MODE</span>
+                    <label class="switch">
+                        <input type="checkbox" id="zen-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
                 <div id="card-engine" class="player-card">
                     <span class="player-info">ARCKNIGHT_AI</span>
                     <div id="engine-timer" class="timer">10:00</div>
@@ -318,6 +330,21 @@
 
         let playerTime = 600, engineTime = 600, isPlayerTurn = true;
         let timerInterval = null, timerStarted = false, isTimeOut = false;
+        let isZenMode = false;
+
+        // Toggle Listener
+        $('#zen-toggle').on('change', function() {
+            isZenMode = $(this).is(':checked');
+            if (isZenMode) {
+                if (timerInterval) clearInterval(timerInterval);
+                $('.timer').text('--:--').css('color', 'var(--border-dark)');
+            } else {
+                updateClocks();
+                if (timerStarted && !game.game_over() && !isTimeOut) {
+                    startTimer();
+                }
+            }
+        });
 
         function formatTime(s) {
             let m = Math.floor(s / 60), sec = s % 60;
@@ -325,13 +352,15 @@
         }
 
         function updateClocks() {
-            $('#player-timer').text(formatTime(playerTime));
-            $('#engine-timer').text(formatTime(engineTime));
+            if (isZenMode) return; // Prevent overwriting Zen UI
+            $('#player-timer').text(formatTime(playerTime)).css('color', '');
+            $('#engine-timer').text(formatTime(engineTime)).css('color', '');
             if (playerTime <= 60) $('#card-player').addClass('low-time');
             if (engineTime <= 60) $('#card-engine').addClass('low-time');
         }
 
         function handleTimeout(loser) {
+            if (isZenMode) return;
             clearInterval(timerInterval); isTimeOut = true;
             $('.player-card').removeClass('active');
             if (loser === 'player') $status.text("> ERR: TIME_OUT. AI_WINS.").css("color", "var(--pink)");
@@ -339,6 +368,10 @@
         }
 
         function startTimer() {
+            if (isZenMode) {
+                $('#card-player').addClass('active'); // Keep UI lighting active
+                return;
+            }
             if (timerInterval) clearInterval(timerInterval);
             $('#card-player').addClass('active');
             timerInterval = setInterval(() => {
@@ -349,10 +382,8 @@
             }, 1000);
         }
 
-        // Pad numbers to look like terminal code (01, 02, etc)
         function logMove(sanMove, isWhite) {
             let padNum = currentMoveNumber.toString().padStart(2, '0');
-            
             if (isWhite) {
                 let html = `<div class="log-entry" id="turn-${currentMoveNumber}">
                                 <span class="log-num">${padNum}</span>
@@ -383,7 +414,6 @@
             return null;
         }
 
-        // Visual screen flash on Checkmate
         function triggerCheckmateFlash() {
             $('body').css('background', 'var(--pink)');
             setTimeout(() => { $('body').css('background', 'var(--bg-base)'); }, 150);
@@ -446,11 +476,16 @@
                 const response = await fetch('http://localhost:3000/api/move', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ moves: moveString })
+                    body: JSON.stringify({ 
+                        moves: moveString,
+                        isUntimed: isZenMode,
+                        wtime: playerTime * 1000,
+                        btime: engineTime * 1000
+                    })
                 });
                 
                 const data = await response.json();
-                if (data.bestmove && !isTimeOut) {
+                if (data.bestmove && (!isTimeOut || isZenMode)) {
                     let fromSq = data.bestmove.substring(0, 2);
                     let toSq = data.bestmove.substring(2, 4);
                     let promo = data.bestmove.length > 4 ? data.bestmove.charAt(4) : '';
