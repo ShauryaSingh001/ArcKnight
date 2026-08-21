@@ -34,7 +34,7 @@ The goal of this project was not just to build a playable chess game, but to exp
 ArcKnight is built with a focus on raw execution speed and memory efficiency. The engine relies on 64-bit integer bitboards and fast bitwise operations to generate and evaluate moves.
 
 **Latest Benchmarks (Single-Threaded):**
-* **Throughput:** ~29.2 Million Nodes Per Second (NPS)
+* **Throughput:** ~3.8 Million Nodes Per Second (NPS)
 * **Search Depth:** Stable at Depth 5 in timed matches (Reaches Depth 6 in Zen Mode)
 * **Time Complexity Control:** MVV-LVA combined with Alpha-Beta pruning heavily optimizes the standard Minimax game tree, slashing node evaluations from millions to thousands.
 
